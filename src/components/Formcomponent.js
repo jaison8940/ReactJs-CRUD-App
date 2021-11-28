@@ -3,17 +3,21 @@ import {useForm} from 'react-hook-form'
 import { Form, Button, Container,Row,Col, Table } from 'react-bootstrap';
 import {AiFillDelete} from "react-icons/ai";
 import {MdModeEditOutline} from "react-icons/md";
+import axios from "axios";
+import Spinner from "./Spinner";
+
 function Formcomponent() {
     const {register,handleSubmit,reset,setValue,formState:{errors}} = useForm();
     const [formData,setFormData] = useState([]);
     const [id,setId] = useState(0);
     const [userData,setUserData] = useState([]);
     const [toggle,setToggle] = useState(0);
+    const [spinnerToggle,setSpinnerToggle] = useState(0);
     const [editId,setEditId] = useState(-1);
+    
     const onSubmit = (data) => {
         if(editId == -1)
         {
-            setId(id+1);
             setFormData(data);
             setToggle(1);
         }
@@ -30,52 +34,49 @@ function Formcomponent() {
     const deleteItem = (id) => {
         // console.log(e.target.id);
         // console.log(id);
-        const temp = {"Id":id};
-        setFormData(temp);
+        // const temp = {"Id":id};
+        setId(id);
+        // setFormData(temp);
         setToggle(2);
     }
     
-    const editItem = (id) =>{
-        console.log(id);
-        const index = userData.map(e => e.Id).indexOf(id);
+    const editItem = (index) =>{
         console.log(index);
-        setValue("name",userData[index].Name);
-        setValue("email",userData[index].Email);
-        setValue("contactno",userData[index].ContactNo);
-        setEditId(id);
+        // const index = userData.map(e => e.Id).indexOf(id);
+        // console.log(index);
+        setValue("name",userData[index].name);
+        setValue("email",userData[index].email);
+        setValue("contactno",userData[index].contactno);
+        setEditId(userData[index].id);
 
     }
     useEffect(() => {
         if(toggle == 0)
         {
-            fetch('https://71z8dy3n5f.execute-api.us-east-1.amazonaws.com/dev/user')
-            .then(res => res.json())
+            setSpinnerToggle(1);
+            axios.get('http://localhost:5000/user')
             .then(res => {
-                // console.log(typeof(res)+" "+res);
-                res.sort(function (a, b) {
-                    return a.Id - b.Id;
-                  });
-                setUserData(res);
-                console.log("called usereffect");
+                console.log("axios");
+                console.log(res.data);
+                setUserData(res.data);
+                setSpinnerToggle(0);
             });
         }
         else if(toggle == 1)
         {
-            fetch(`https://71z8dy3n5f.execute-api.us-east-1.amazonaws.com/dev/user`,{
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                  },
-                body: JSON.stringify({"Id":id,"Name": formData.name,"Email":formData.email, "Contactno": formData.contactno})
+            setSpinnerToggle(1);
+            axios.post(`http://localhost:5000/user`,{
+                "name": formData.name,
+                "email":formData.email, 
+                "contactno": formData.contactno
             })
-            .then(res => res.json())
             .then(res => {
                 // setUserData(res);
-                console.log(res);
+                console.log(res.data);
                 
                 setToggle(0);
                 reset();
+                setSpinnerToggle(0);
             });
             console.log("post");
             console.log(formData);
@@ -84,42 +85,34 @@ function Formcomponent() {
         else if(toggle == 2)
         {
             console.log(formData);
-            fetch(`https://71z8dy3n5f.execute-api.us-east-1.amazonaws.com/dev/user`,{
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                  },
-                  
-                body: JSON.stringify({"Id":formData.Id})
-            })
-            .then(res => res.json())
+            setSpinnerToggle(1);
+            axios.delete(`http://localhost:5000/user/${id}`)
             .then(res => {
                 // setUserData(res);
                 console.log(res);
                 
                 setToggle(0);
+                setSpinnerToggle(0);
                
             });
 
         }
         else if(toggle == 3)
         {
-            fetch(`https://71z8dy3n5f.execute-api.us-east-1.amazonaws.com/dev/user`,{
-                method: 'PUT',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                  },
-                body: JSON.stringify({"Id":editId,"Name": formData.name,"Email":formData.email, "Contactno": formData.contactno})
+            setSpinnerToggle(1);
+            axios.put(`http://localhost:5000/user`,{
+                "id":editId,
+                "name": formData.name,
+                "email":formData.email, 
+                "contactno": formData.contactno
             })
-            .then(res => res.json())
             .then(res => {
                 // setUserData(res);
-                console.log(res);
+                console.log(res.data);
                 setEditId(-1);
                 setToggle(0);
                 reset();
+                setSpinnerToggle(0);
             });
         }
     },[toggle]);
@@ -128,7 +121,7 @@ function Formcomponent() {
 
     return (
         <div>
-            <Container>
+          <Container>
             <Row>
                 <Col sm={4} >
                     <Form onSubmit={handleSubmit(onSubmit)}>
@@ -166,18 +159,18 @@ function Formcomponent() {
                         </tr>
                         </thead>
                         <tbody>
-                            {userData.map((user) => {
+                            {Object.keys(userData).map((key) => {
                                 var isChecked = false;
                                 let color;
                                 return (
-                                    <tr key={user.Id}>
-                                        <td>{user.Id}</td>
-                                        <td>{user.Name}</td>
-                                        <td>{user.Email}</td>
-                                        <td>{user.ContactNo}</td>
-                                        <td id={user.Id} style={{color: 'green'}} onClick = {() => editItem(user.Id)} ><MdModeEditOutline/></td>
+                                    <tr key={userData[key].id}>
+                                        <td>{userData[key].id}</td>
+                                        <td>{userData[key].name}</td>
+                                        <td>{userData[key].email}</td>
+                                        <td>{userData[key].contactno}</td>
+                                        <td id={userData[key].id} style={{color: 'green'}} onClick = {() => editItem(key)} ><MdModeEditOutline/></td>
                                         
-                                        <td id={user.Id} style={{color: 'red'}} onClick = {() => deleteItem(user.Id)}><AiFillDelete/></td>
+                                        <td id={userData[key].id} style={{color: 'red'}} onClick = {() => deleteItem(userData[key].id)}><AiFillDelete/></td>
                                         
                                          
                                         
@@ -194,6 +187,7 @@ function Formcomponent() {
             </Row>
             
             </Container>
+        
         </div>
     )
 }
