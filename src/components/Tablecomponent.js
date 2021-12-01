@@ -1,8 +1,6 @@
 import React,{useState,useEffect} from 'react'
 import { Table } from 'react-bootstrap';
-import {useForm} from 'react-hook-form'
 import axios from "axios";
-import { ThemeProvider } from '@mui/material';
 import {AiFillDelete} from "react-icons/ai";
 import {MdModeEditOutline} from "react-icons/md";
 
@@ -11,12 +9,12 @@ function Tablecomponent({toggle,setData,setToggle,setTableToggle}) {
     const [userData,setUserData] = useState([]);
     
   
-    const [editId,setEditId] = useState(-1);
+    // const [editId,setEditId] = useState(-1);
 
     useEffect(() => {
         
         console.log("table");    
-        axios.get('http://localhost:5000/user')
+        axios.get('http://localhost:5000/users')
         .then(res => {
             console.log("axios");
             console.log(res.data);
@@ -29,7 +27,7 @@ function Tablecomponent({toggle,setData,setToggle,setTableToggle}) {
 
     const deleteItem = (id) => {
         const deleteId = id;
-        axios.delete(`http://localhost:5000/user/${deleteId}`)
+        axios.delete(`http://localhost:5000/users/${deleteId}`)
             .then(res => {
                 // setUserData(res);
                 console.log(res);               
@@ -56,6 +54,7 @@ function Tablecomponent({toggle,setData,setToggle,setTableToggle}) {
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>DOB</th>
                     <th>Email</th>
                     <th>Contact No</th>
                     <th>Edit</th>
@@ -71,6 +70,7 @@ function Tablecomponent({toggle,setData,setToggle,setTableToggle}) {
                             <tr key={userData[key].id}>
                                 <td>{userData[key].id}</td>
                                 <td>{userData[key].name}</td>
+                                <td>{userData[key].dob}</td>
                                 <td>{userData[key].email}</td>
                                 <td>{userData[key].contactno}</td>
                                 <td id={userData[key].id} style={{color: 'green'}} onClick = {() => editItem(key)} ><MdModeEditOutline/></td>                           
